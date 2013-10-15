@@ -2,7 +2,7 @@
 This module provides a generator that yields strings which match a given regexp.
 
 # APIs
-## [Function] regexp->string-generator re :key (*-max-repeat 8) (char-set-universe (char-set-complement #[]))
+## [Function] regexp->string-generator re :key (*-max-repeat 8) (char-set-universe char-set:full)
 Creates a generator that yields strings
 which match a given regular expression RE.
 

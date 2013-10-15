@@ -8,9 +8,6 @@
 
 (select-module pxeger)
 
-(define char-set:any
-  (char-set-complement #[]))
-
 (define (regexp-naive-ast re)
   (regexp-parse (regexp->string re)))
 
@@ -27,7 +24,7 @@
 ;; - conditional matching -- (?test-pattern then-pattern|else-pattern)
 (define (regexp->string-generator re
                                   :key
-                                  (char-set-universe char-set:any)
+                                  (char-set-universe char-set:full)
                                   (*-max-repeat 8))
   (define (ast->generator uncase? ast)
     (match ast
