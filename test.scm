@@ -57,11 +57,11 @@
          #t
          (string-every u
                        ((regexp->string-generator #/.{128}/
-                                           :char-set-universe u))))
+                                                  :char-set-universe u))))
   (test* "char-set-universe: #[a-zA-Z0-9&&[^A-Z]]"
          #t
          (string-every (char-set-difference u #[A-Z])
                        ((regexp->string-generator #/[^A-Z]{128}/
-                                           :char-set-universe u)))))
+                                                  :char-set-universe u)))))
 
 (test-end :exit-on-failure #t)
