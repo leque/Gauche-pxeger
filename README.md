@@ -17,11 +17,10 @@ This function supports subset of Gauche's regular expression.
 Unsupported syntaxes are:
 
 - non-greedy patterns -- `*?`, `+?`, `??`, `{n,m}?`
-- back reference -- `\n`
-- named back reference -- `\k<name>`
 - beginning / end of string -- `^`, `$`
 - word boundary -- `\b`, `\B`
 - look ahead -- `(?=pat)`, `(?!pat)`
 - look behind -- `(?<=pat)`, `(?<!pat)`
 - atomic patterns -- `(?>pattern)`, `*+`, `++`, `?+`
-- conditional matching -- `(?test-pattern then-pattern|else-pattern)`
+- conditional matching -- `(?assertion then-pattern|else-pattern)`
+    - `(?(integer)then-pattern|else-pattern)` is supported

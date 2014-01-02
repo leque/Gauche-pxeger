@@ -11,11 +11,18 @@
 (define (regexp-naive-ast re)
   (regexp-parse (regexp->string re)))
 
+(define (return/env res env)
+  (list res env))
+
+(define (context-result ctx)
+  (car ctx))
+
+(define (context-env ctx)
+  (cadr ctx))
+
 ;; Generates strings that match a given regular expression.
 ;; Unsupported syntaxes are:
 ;; - non-greedy patterns -- *?, +?, ??, {n,m}?
-;; - back reference -- \n
-;; - named back reference -- \k<name>
 ;; - beginning / end of string -- ^, $
 ;; - word boundary -- \b, \B
 ;; - look ahead -- (?=pat), (?!pat)
@@ -26,41 +33,81 @@
                                   :key
                                   (char-set-universe char-set:full)
                                   (*-max-repeat 8))
-  (define (ast->generator uncase? ast)
+  (define (ast->generator uncase? env ast)
+    (define (wrap-gen gen)
+      (^[] (return/env (gen) env)))
+    (define (gconst x)
+      (^[] x))
+    (define (sequence env asts)
+      (^[]
+        (let loop ((asts asts)
+                   (env env)
+                   (rs '()))
+          (if (null? asts)
+              (return/env (reverse! rs) env)
+              (let* ((g (ast->generator uncase? env (car asts)))
+                     (ctx (g)))
+                (loop (cdr asts)
+                      (context-env ctx)
+                      (cons (context-result ctx) rs)))))))
     (match ast
       ((? char? c)
-       (if uncase?
-           (^[] (if (booleans) c (char-upcase c)))
-           (^[] c)))
+       (wrap-gen (if uncase?
+                     (^[] (if (booleans) c (char-upcase c)))
+                     (gconst c))))
       ((? char-set? cs)
-       (chars$ cs))
+       (wrap-gen (chars$ cs)))
       (('comp . (? char-set? cs))
-       (chars$ (char-set-difference char-set-universe cs)))
+       (wrap-gen (chars$ (char-set-difference char-set-universe cs))))
       ('any
-       (chars$ char-set-universe))
+       (wrap-gen (chars$ char-set-universe)))
       (('seq-uncase . asts)
-       (ast->generator #t `(seq ,@asts)))
+       (ast->generator #t env `(seq ,@asts)))
       (('seq-case . asts)
-       (ast->generator #f `(seq ,@asts)))
+       (ast->generator #f env `(seq ,@asts)))
       (('seq . asts)
-       (let ((gens (map (cut ast->generator uncase? <>) asts)))
-         (apply tuples-of gens)))
+       (sequence env asts))
       (('alt . asts)
-       (samples-from (list->vector (map (cut ast->generator uncase? <>) asts))))
+       (samples-from
+        (list->vector (map (cut ast->generator uncase? env <>) asts))))
       (('rep m n . asts)
-       (let ((g (ast->generator uncase? `(seq ,@asts)))
+       (let ((ast `(seq ,@asts))
              (sizer (integers-between$ m
                                        (if (number? n)
                                            n
                                            (+ m *-max-repeat)))))
-         (lists-of sizer g)))
+         (case (sizer)
+           ((0)
+            (wrap-gen (gconst '())))
+           ((1)
+            (ast->generator uncase? env ast))
+           (else
+            => (lambda (n)
+                 (let ((g (ast->generator uncase? env ast)))
+                   (^[]
+                     (let ((ctx (g)))
+                       (return/env
+                        (list
+                         (map context-result (list-tabulate (- n 1) (^_ (g))))
+                         (context-result ctx))
+                        (context-env ctx))))))))))
       (((? integer? n) sym . asts)
-       (ast->generator uncase? `(seq ,@asts)))
+       (let ((gen (ast->generator uncase? env `(seq ,@asts))))
+         (^[]
+           (let* ((ctx (gen))
+                  (res (context-result ctx))
+                  (env~ (context-env ctx)))
+             (return/env res (alist-cons n res env~))))))
+      ((backref . (? integer? n))
+       ;; #/(){0}\1/ fails here as ((chars$ #[])) does
+       (wrap-gen (gconst (cdr (assv n env)))))
+      ((cpat (? integer? n) ypat npat)
+       (let ((ast (if (assv n env) ypat npat)))
+         (ast->generator uncase? env `(seq ,@ast))))
       ((or 'bol 'eol 'wb 'nwb
            ('rep-min . _)
            ('rep-while . _)
            ('cpat . _)
-           ('backref . _)
            ('once . _)
            ('assert . _)
            ('nassert . _))
@@ -72,5 +119,6 @@
   (unless (and (integer? *-max-repeat)
                (>= *-max-repeat 0))
     (error "non-negative integer required, but got: " *-max-repeat))
-  (let ((gen (ast->generator #f (regexp-naive-ast re))))
-    (^[] (tree->string (gen)))))
+  (let ((gen (ast->generator #f '() (regexp-naive-ast re))))
+    (^[]
+      (tree->string (context-result (gen))))))
