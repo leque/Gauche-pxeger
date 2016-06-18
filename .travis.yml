@@ -11,6 +11,5 @@ before_install:
   - sh .travis-gauche.sh
 script:
   - gosh -V
-  - ./DIST gen
   - ./configure
   - make check
