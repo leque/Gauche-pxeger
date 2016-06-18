@@ -2,12 +2,12 @@
 This module provides a generator that yields strings which match a given regexp.
 `(string-reverse "regexp") ; => "pxeger"`.
 
-# Requirement
+## Requirement
 
 - [Gauche](http://practical-scheme.net/gauche/) 0.9.4 or later
 
-# APIs
-## [Function] regexp->string-generator re :key (*-max-repeat 8) (char-set-universe char-set:full)
+## APIs
+### [Function] regexp->string-generator re :key (*-max-repeat 8) (char-set-universe char-set:full)
 Creates a generator that yields strings
 which match a given regular expression RE.
 
