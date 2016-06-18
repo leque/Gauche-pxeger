@@ -8,7 +8,7 @@ addons:
 env:
   - GAUCHE_VERSION=0.9.4
 before_install:
-  - sh test/travis-gauche.sh
+  - sh .travis-gauche.sh
 script:
   - gosh -V
   - ./DIST gen

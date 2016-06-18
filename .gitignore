@@ -1,3 +1,5 @@
+Makefile
+VERSION
 *.gpd
 *.log
 *.status
