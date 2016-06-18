@@ -8,7 +8,7 @@ addons:
 env:
   - GAUCHE_VERSION=0.9.4
 before_install:
-  - curl https://raw.githubusercontent.com/leque/Gauche-pxeger/fix-ci/test/travis-gauche.sh | sh
+  - curl https://raw.githubusercontent.com/leque/Gauche-pxeger/master/test/travis-gauche.sh | sh
 script:
   - gosh -V
   - ./DIST gen
