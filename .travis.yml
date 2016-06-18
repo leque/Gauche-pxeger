@@ -1,0 +1,10 @@
+language: generic
+env:
+  - GAUCHE_VERSION=0.9.4
+before_install:
+  - curl https://raw.github.com/leque/Gauche-pxeger/master/test/travis-gauche.sh | sh
+script:
+  - gosh -V
+  - ./DIST gen
+  - ./configure
+  - make check
