@@ -1,5 +1,10 @@
-# What is this?
+# Gauche-pxeger [![Build Status](https://travis-ci.org/leque/Gauche-pxeger.svg?branch=master)](https://travis-ci.org/leque/Gauche-pxeger)
 This module provides a generator that yields strings which match a given regexp.
+`(string-reverse "regexp") ; => "pxeger"`.
+
+# Requirement
+
+- [Gauche](http://practical-scheme.net/gauche/) 0.9.4 or later
 
 # APIs
 ## [Function] regexp->string-generator re :key (*-max-repeat 8) (char-set-universe char-set:full)
